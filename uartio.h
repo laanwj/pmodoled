@@ -1,0 +1,44 @@
+// From the "led_fade" demo (Apache 2 license).
+#ifndef H_UARTIO
+#define H_UARTIO
+/* Unbuffered UART I/O */
+
+static void uart_init()
+{
+    // Configure UART to print
+    GPIO_REG(GPIO_OUTPUT_VAL) |= IOF0_UART0_MASK;
+    GPIO_REG(GPIO_OUTPUT_EN)  |= IOF0_UART0_MASK;
+    GPIO_REG(GPIO_IOF_SEL)    &= ~IOF0_UART0_MASK;
+    GPIO_REG(GPIO_IOF_EN)     |= IOF0_UART0_MASK;
+
+    // 115200 Baud Rate
+    UART0_REG(UART_REG_DIV) = 138;
+    UART0_REG(UART_REG_TXCTRL) = UART_TXEN;
+    UART0_REG(UART_REG_RXCTRL) = UART_RXEN;
+
+    // Wait a bit to avoid corruption on the UART.
+    // (In some cases, switching to the IOF can lead
+    // to output glitches, so need to let the UART
+    // reciever time out and resynchronize to the real 
+    // start of the stream.
+    volatile int i=0;
+    while(i < 10000){i++;}
+}
+
+static void _putc(char c)
+{
+    while ((int32_t) UART0_REG(UART_REG_TXFIFO) < 0);
+    UART0_REG(UART_REG_TXFIFO) = c;
+}
+
+static int _getc(char * c)
+{
+    int32_t val = (int32_t) UART0_REG(UART_REG_RXFIFO);
+    if (val > 0) {
+        *c =  val & 0xFF;
+        return 1;
+    }
+    return 0;
+}
+
+#endif
