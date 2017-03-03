@@ -9,6 +9,8 @@ Drive Digilent pmodOLED module from a HiFive board
 
 (note: this is an older version of the software when the wiring was different).
 
+A [youtube video](https://www.youtube.com/watch?v=-BsNUnwE9x0).
+
 Wiring up
 -----------
 
