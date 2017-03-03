@@ -10,6 +10,7 @@
  */
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "platform.h"
 
 #include "uartio.h"
@@ -443,7 +444,7 @@ int main(void)
 #endif
         frame += 1;
     }
-#elif 1 /* Mandelbrot (floating point) */
+#elif 0 /* Mandelbrot (floating point) */
     int frame = 0;
     float basex = -2.0f;
     float basey = -1.0f;
@@ -478,6 +479,69 @@ int main(void)
                     }
 
                     int bit = it < itmax;
+                    byte |= (bit << yi);
+                }
+                spi(byte);
+            }
+        }
+        frame += 1;
+    }
+#elif 1 /* Mandelbrot (fixed point) */
+#define PREC 32  /* number of precision bits */
+#define I(x) (((int64_t)(x))<<PREC) /* integral value */
+/* stupid multiplication of two fp_t */
+#define MUL(x,y)  (((x)>>(PREC/2)) * ((y)>>(PREC/2)))
+typedef int64_t fp_t;
+    int frame = 0;
+#if 0
+    fp_t centerx = I(-1)/2;
+    fp_t centery = I(0);
+#elif 1
+    fp_t centerx = I(-1)/2;
+    fp_t centery = I(3)/4;
+#endif
+    while (1) {
+        fp_t radiusx = I(3)/2 - frame*150000000LL;
+        fp_t radiusy = I(2)/2 - frame*150000000LL;
+        fp_t basex = centerx - radiusx;
+        fp_t basey = centery - radiusy;
+        fp_t stepx = 2 * radiusx / DISP_W;
+        fp_t stepy = 2 * radiusy / DISP_H;
+        int itmax = 10;
+
+        if (radiusx < 0 || radiusy < 0) {
+            frame = 0;
+            centerx = ((fp_t)mrand48() << 2) + I(-1)/2;
+            centery = ((fp_t)mrand48() << 1);
+            continue;
+        }
+
+        for (int row=0; row<4; ++row) {
+            for (int x=0; x<DISP_W; ++x) {
+                uint8_t byte = 0;
+                for (int yi=0; yi<8; ++yi) {
+                    int y = row*8+yi;
+                    fp_t cx = basex + x * stepx;
+                    fp_t cy = basey + y * stepy;
+                    /* Z = 0 */
+                    fp_t zx = I(0);
+                    fp_t zy = I(0);
+                    int it;
+                    for (it=0; it<itmax; ++it) {
+                        fp_t zx2 = MUL(zx,zx);
+                        fp_t zy2 = MUL(zy,zy);
+                        /* |Z| <= 2 */
+                        if (zx2 + zy2 > I(4)) {
+                            break;
+                        }
+                        /* Z = Z^2 + C */
+                        fp_t twozxy = 2 * MUL(zx,zy);
+                        zx = zx2 - zy2 + cx;
+                        zy = twozxy + cy;
+                    }
+
+                    //int bit = it < itmax;
+                    int bit = it&1;
                     byte |= (bit << yi);
                 }
                 spi(byte);
