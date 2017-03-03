@@ -244,16 +244,6 @@ void mandelbrot()
 
 int main(void)
 {
-#if 0
-    // Run off 16 MHz Crystal for accuracy.
-    PRCI_REG(PRCI_PLLCFG) = (PLL_REFSEL(1) | PLL_BYPASS(1));
-    PRCI_REG(PRCI_PLLCFG) |= (PLL_SEL(1));
-    // Turn off HFROSC to save power
-    PRCI_REG(PRCI_HFROSCCFG) = 0;
-
-    uart_init();
-#endif
-
     puts(sifive_msg);
     puts(led_msg);
 
