@@ -12,7 +12,7 @@ Drive Digilent pmodOLED module from a HiFive board
 Wiring
 --------
 
-See [pmodoled.c](pmodoled.c) under "Wiring" how to wire connect the PMOD to the
+See [display.c](display.c) under "Wiring" how to wire connect the PMOD to the
 GPIO pins.
 
 Usage
