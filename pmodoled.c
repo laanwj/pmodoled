@@ -327,6 +327,8 @@ void pmodoled_init()
     spi(0x22); spi(0x00); spi(0x03); // page start and end address (create wraparound at line 32)
 }
 
+
+
 int main(void)
 {
     // Run off 16 MHz Crystal for accuracy.
@@ -346,6 +348,7 @@ int main(void)
 
     // Data mode is assumed the default throughout the program
     mode_data();
+#if 0
     outch('t');
     outch('e');
     outch('s');
@@ -394,4 +397,93 @@ int main(void)
             }
         }
     }
+#elif 0
+    int frame = 0;
+    while (1) {
+#if 0 /* Function */
+        sleep_ticks(300);
+        for (int row=0; row<4; ++row) {
+            for (int x=0; x<DISP_W; ++x) {
+                uint8_t byte = 0;
+                for (int yi=0; yi<8; ++yi) {
+                    int y = row*8+yi;
+                    int val = x * y - frame;
+                    //int bit = val >= -1 && val <= 1;
+                    int bit = (val & 255)==0;
+                    byte |= (bit << yi);
+                }
+                spi(byte);
+            }
+        }
+#elif 1  /* Perspective effect */
+#define N (100)
+        uint8_t rows[32] = {0};
+        int z = - frame + 50;
+        for (int i=0; i<16; ++i) {
+            int zi = z + i*N;
+            if (zi <= 0) { /* behind camera */
+                continue;
+            }
+            int y = (65536/zi)>>3;
+            if (y >= 0 && y < 32) {
+                rows[y] = 1;
+            }
+        }
+        for (int row=0; row<4; ++row) {
+            for (int x=0; x<DISP_W; ++x) {
+                uint8_t byte = 0;
+                for (int yi=0; yi<8; ++yi) {
+                    byte |= (rows[row*8+yi] << yi);
+                }
+                spi(byte);
+            }
+        }
+        if (frame > N)
+            frame = 0;
+#endif
+        frame += 1;
+    }
+#elif 1 /* Mandelbrot (floating point) */
+    int frame = 0;
+    float basex = -2.0f;
+    float basey = -1.0f;
+    float stepx = 3.0f / 128.0f;
+    float stepy = 2.0f / 32.0f;
+
+    while (1) {
+        int itmax = frame;
+
+        for (int row=0; row<4; ++row) {
+            for (int x=0; x<DISP_W; ++x) {
+                uint8_t byte = 0;
+                for (int yi=0; yi<8; ++yi) {
+                    int y = row*8+yi;
+                    float cx = basex + x * stepx;
+                    float cy = basey + y * stepy;
+                    /* Z = 0 */
+                    float zx = 0.0f;
+                    float zy = 0.0f;
+                    int it;
+                    for (it=0; it<itmax; ++it) {
+                        float zx2 = zx*zx;
+                        float zy2 = zy*zy;
+                        /* |Z| <= 2 */
+                        if (zx2 + zy2 > 4.0f) {
+                            break;
+                        }
+                        /* Z = Z^2 + C */
+                        float twozxy = 2.0*zx*zy;
+                        zx = zx2 - zy2 + cx;
+                        zy = twozxy + cy;
+                    }
+
+                    int bit = it < itmax;
+                    byte |= (bit << yi);
+                }
+                spi(byte);
+            }
+        }
+        frame += 1;
+    }
+#endif
 }
