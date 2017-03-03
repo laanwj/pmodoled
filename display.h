@@ -22,5 +22,7 @@ void spi_complete(void);
 void mode_data(void);
 /** set mode to commands */
 void mode_cmd(void);
+/** clear (visible portion of) screen, reset pointers */
+void pmodoled_clear(void);
 
 #endif

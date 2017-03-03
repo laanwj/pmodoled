@@ -90,56 +90,26 @@ static void outch(uint8_t ch)
     col += CHAR_W;
 }
 
-#if 1
-#define PREC 48  /* number of precision bits */
-#define ITMAX 16 /* number of iterations */
-#define I(x) (((int64_t)(x))<<PREC) /* integral value */
-#define FRAC(x,y) (I(x)/(y)) /* fraction */
-/* stupid multiplication of two fp_t */
-#define MUL(x,y)  (((x)>>(PREC/2)) * ((y)>>(PREC/2)))
-#define ZOOM_MUL (256L)
-typedef int64_t fp_t;
-
-/* Is a point on the mandelbrot set interesting to zoom in on? */
-int interesting(fp_t x, fp_t y)
+void texttest()
 {
-    return 1; /* TODO */
-}
-#endif
-
-
-int main(void)
-{
-#if 0
-    // Run off 16 MHz Crystal for accuracy.
-    PRCI_REG(PRCI_PLLCFG) = (PLL_REFSEL(1) | PLL_BYPASS(1));
-    PRCI_REG(PRCI_PLLCFG) |= (PLL_SEL(1));
-    // Turn off HFROSC to save power
-    PRCI_REG(PRCI_HFROSCCFG) = 0;
-
-    uart_init();
-#endif
-
-    puts(sifive_msg);
-    puts(led_msg);
-
-    rgb_init();
-
-    pmodoled_init();
-
-    // Data mode is assumed the default throughout the program
-    mode_data();
-#if 0
-    outch('t');
+    outch('[');
     outch('e');
     outch('s');
+    outch('c');
+    outch(' ');
+    outch('e');
+    outch('x');
+    outch('i');
     outch('t');
+    outch('s');
+    outch(']');
+    newline();
 
+    char c = 0;
     uint16_t r=0xFF;
     uint16_t g=0;
     uint16_t b=0;
     unsigned led_bright = 3;
-    char c = 0;
     while(1) {
         sleep_ticks(300);
 
@@ -172,101 +142,35 @@ int main(void)
                 newline();
                 _putc('\r');
                 _putc('\n');
+            } else if (c==27) { // Quit
+                break;
             } else {
                 outch(c);
                 _putc(c);
             }
         }
     }
-#elif 0
-    int frame = 0;
-    while (1) {
-#if 0 /* Function */
-        sleep_ticks(300);
-        for (int row=0; row<4; ++row) {
-            for (int x=0; x<DISP_W; ++x) {
-                uint8_t byte = 0;
-                for (int yi=0; yi<8; ++yi) {
-                    int y = row*8+yi;
-                    int val = x * y - frame;
-                    //int bit = val >= -1 && val <= 1;
-                    int bit = (val & 255)==0;
-                    byte |= (bit << yi);
-                }
-                spi(byte);
-            }
-        }
-#elif 1  /* Perspective effect */
-#define N (100)
-        uint8_t rows[32] = {0};
-        int z = - frame + 50;
-        for (int i=0; i<16; ++i) {
-            int zi = z + i*N;
-            if (zi <= 0) { /* behind camera */
-                continue;
-            }
-            int y = (65536/zi)>>3;
-            if (y >= 0 && y < 32) {
-                rows[y] = 1;
-            }
-        }
-        for (int row=0; row<4; ++row) {
-            for (int x=0; x<DISP_W; ++x) {
-                uint8_t byte = 0;
-                for (int yi=0; yi<8; ++yi) {
-                    byte |= (rows[row*8+yi] << yi);
-                }
-                spi(byte);
-            }
-        }
-        if (frame > N)
-            frame = 0;
-#endif
-        frame += 1;
-    }
-#elif 0 /* Mandelbrot (floating point) */
-    int frame = 0;
-    float basex = -2.0f;
-    float basey = -1.0f;
-    float stepx = 3.0f / 128.0f;
-    float stepy = 2.0f / 32.0f;
+}
 
-    while (1) {
-        int itmax = frame;
+/* Mandelbrot */
+#define PREC 48  /* number of precision bits */
+#define ITMAX 16 /* number of iterations */
+#define I(x) (((int64_t)(x))<<PREC) /* integral value */
+#define FRAC(x,y) (I(x)/(y)) /* fraction */
+/* stupid multiplication of two fp_t */
+#define MUL(x,y)  (((x)>>(PREC/2)) * ((y)>>(PREC/2)))
+#define ZOOM_MUL (256L)
+typedef int64_t fp_t;
 
-        for (int row=0; row<4; ++row) {
-            for (int x=0; x<DISP_W; ++x) {
-                uint8_t byte = 0;
-                for (int yi=0; yi<8; ++yi) {
-                    int y = row*8+yi;
-                    float cx = basex + x * stepx;
-                    float cy = basey + y * stepy;
-                    /* Z = 0 */
-                    float zx = 0.0f;
-                    float zy = 0.0f;
-                    int it;
-                    for (it=0; it<itmax; ++it) {
-                        float zx2 = zx*zx;
-                        float zy2 = zy*zy;
-                        /* |Z| <= 2 */
-                        if (zx2 + zy2 > 4.0f) {
-                            break;
-                        }
-                        /* Z = Z^2 + C */
-                        float twozxy = 2.0*zx*zy;
-                        zx = zx2 - zy2 + cx;
-                        zy = twozxy + cy;
-                    }
+/* Is a point on the mandelbrot set interesting to zoom in on? */
+int interesting(fp_t x, fp_t y)
+{
+    return 1; /* TODO */
+}
 
-                    int bit = it < itmax;
-                    byte |= (bit << yi);
-                }
-                spi(byte);
-            }
-        }
-        frame += 1;
-    }
-#elif 1 /* Mandelbrot (fixed point) */
+void mandelbrot()
+{
+    char c;
     int frame = 0;
     fp_t centerx = I(-1)/2;
     fp_t centery = I(3)/4;
@@ -274,7 +178,7 @@ int main(void)
     fp_t start_radiusy = I(2);
     fp_t radiusx = start_radiusx;
     fp_t radiusy = start_radiusy;
-    while (1) {
+    while (!_getc(&c)) {
         if (frame == 0) {
             do {
                 centerx = ((fp_t)mrand48()<<(PREC-31)) + I(-1)/2;
@@ -336,5 +240,37 @@ int main(void)
         radiusx = (radiusx * (ZOOM_MUL-1))/ZOOM_MUL;
         radiusy = (radiusy * (ZOOM_MUL-1))/ZOOM_MUL;
     }
+}
+
+int main(void)
+{
+#if 0
+    // Run off 16 MHz Crystal for accuracy.
+    PRCI_REG(PRCI_PLLCFG) = (PLL_REFSEL(1) | PLL_BYPASS(1));
+    PRCI_REG(PRCI_PLLCFG) |= (PLL_SEL(1));
+    // Turn off HFROSC to save power
+    PRCI_REG(PRCI_HFROSCCFG) = 0;
+
+    uart_init();
 #endif
+
+    puts(sifive_msg);
+    puts(led_msg);
+
+    rgb_init();
+
+    pmodoled_init();
+
+    // Data mode is assumed the default throughout the program
+    mode_data();
+
+    while (1) {
+        // Mode: mandelbrot
+        pmodoled_clear();
+        mandelbrot();
+
+        // Mode: text test
+        pmodoled_clear();
+        texttest();
+    }
 }

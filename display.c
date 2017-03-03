@@ -78,6 +78,9 @@
 #define OLED_VBATC 1
 #define OLED_VDDC  4
 
+/** SPI speed cannot exceed 10MHz for SSD1306 */
+#define MAX_SPI_FREQ (10000000)
+
 #ifdef SPI_BITBANG
 void spi_init(void)
 {
@@ -129,7 +132,7 @@ void spi_init(void)
      * CPUfreq is set to 16Mhz in this demo.
      * The formula is CPU_FREQ/(1+SPI_SCKDIV)
      */
-    SPI1_REG(SPI_REG_SCKDIV)    = (get_cpu_freq() / 10000000LL) - 1;
+    SPI1_REG(SPI_REG_SCKDIV)    = (get_cpu_freq() / MAX_SPI_FREQ) - 1;
     SPI1_REG(SPI_REG_SCKMODE)   = 0; /* pol and pha both 0 - SCLK is active-high, */
     SPI1_REG(SPI_REG_CSID)      = 0; /* CS 0 */
     SPI1_REG(SPI_REG_CSDEF)     = 0xffff; /* CS is active-low */
@@ -236,5 +239,15 @@ void pmodoled_init()
     spi(0x20); spi(0x00); // horizontal addressing mode
     //spi([0x20,0x01]) # vertical addressing mode
     spi(0x22); spi(0x00); spi(0x03); // page start and end address (create wraparound at line 32)
+}
+
+void pmodoled_clear(void)
+{
+    mode_cmd();
+    spi(0x22); spi(0x00); spi(0x03); // page start and end address (create wraparound at line 32)
+    mode_data();
+    for (unsigned x=0; x<512; ++x) {
+        spi(0);
+    }
 }
 

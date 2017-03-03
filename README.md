@@ -9,11 +9,11 @@ Drive Digilent pmodOLED module from a HiFive board
 
 (note: this is an older version of the software when the wiring was different).
 
-Wiring
---------
+Wiring up
+-----------
 
-See [display.c](display.c) under "Wiring" how to wire connect the PMOD to the
-GPIO pins.
+See [display.c](display.c) under "Wiring" how to wire connect the PMOD connector
+to the HiFive GPIO pins.
 
 Usage
 ----------
@@ -37,9 +37,19 @@ during incremental development as no automatic `make clean` will be run.
 make upload PROGRAM=pmodoled
 ```
 
-The program will automatically launch and display "test" on the display,
-and log a bit of debug information to the UART.
+Demo
+------
 
-The device will act as a simple terminal: everything you enter on the
-serial console will be printed to the display. Newline and backspace should
-work as expected.
+The program will automatically launch after it is uploaded.
+
+Initially it will display a zooming mandelbrot set on the display, and log a
+bit of debug information to the UART.
+
+At the moment there are two modes:
+
+- Mandelbrot mode: Show a zooming mandelbrot set. To switch mode, type any
+  character on the serial console.
+
+- Terminal mode: the device will act as a simple terminal: everything you enter
+  on the serial console will be printed to the display. Newline and backspace
+  should work as expected. Escape exits to the next mode.
