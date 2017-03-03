@@ -245,6 +245,7 @@ void pmodoled_clear(void)
 {
     mode_cmd();
     spi(0x22); spi(0x00); spi(0x03); // page start and end address (create wraparound at line 32)
+    spi(0x00); spi(0x10); spi(0xb0); // reset pointer
     mode_data();
     for (unsigned x=0; x<512; ++x) {
         spi(0);

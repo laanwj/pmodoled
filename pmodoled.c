@@ -92,6 +92,7 @@ static void outch(uint8_t ch)
 
 void texttest()
 {
+    col = row = 0;
     outch('[');
     outch('e');
     outch('s');
