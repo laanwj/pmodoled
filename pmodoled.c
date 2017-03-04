@@ -237,6 +237,7 @@ void mandelbrot()
 
 int main(void)
 {
+    uart_init();
     puts(startup_msg);
 
     rgb_init();
