@@ -6,7 +6,7 @@
  * - SPI interface attached via GPIO pins
  * - SSD1306 controller
  * - 128x32 display
- * See below under "Wiring" how to wire connect the PMOD to the GPIO.
+ * See comment in "display.c" under "Wiring" how to wire the PMOD to the GPIO pins.
  */
 #include <stdint.h>
 #include <stdio.h>
