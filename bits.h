@@ -7,4 +7,6 @@
 
 #define BIT(x) (1<<(x))
 
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
 #endif

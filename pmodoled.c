@@ -22,15 +22,15 @@
 #include "font.h"
 
 /** Startup messages */
-static const char led_msg[] = "\a\n\r\n\r\
+static const char startup_msg[] = "\a\n\r\n\r\
 555555555555555555555555555555555555555555555555\n\r\
 5555555 Type text to display on screen 555555555\n\r\
-555555555555555555555555555555555555555555555555\n\r";
-
-static const char sifive_msg[] = "\n\r\
+555555555555555555555555555555555555555555555555\n\r\
 \n\r\
                'pmodoled' Demo \n\r\
 \n\r";
+
+const char display_msg[]="[esc exits]";
 
 static void set_x(unsigned col)
 {
@@ -92,18 +92,10 @@ static void outch(uint8_t ch)
 
 void texttest()
 {
+    unsigned i;
     col = row = 0;
-    outch('[');
-    outch('e');
-    outch('s');
-    outch('c');
-    outch(' ');
-    outch('e');
-    outch('x');
-    outch('i');
-    outch('t');
-    outch('s');
-    outch(']');
+    for (i=0; display_msg[i]; ++i)
+        outch(display_msg[i]);
     newline();
 
     char c = 0;
@@ -245,8 +237,7 @@ void mandelbrot()
 
 int main(void)
 {
-    puts(sifive_msg);
-    puts(led_msg);
+    puts(startup_msg);
 
     rgb_init();
 
