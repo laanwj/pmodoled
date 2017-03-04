@@ -176,7 +176,7 @@ void mandelbrot()
     fp_t centerx = I(-1)/2;
     fp_t centery = I(3)/4;
     fp_t start_radiusx = I(3);
-    fp_t start_radiusy = I(2);
+    fp_t start_radiusy = I(1);
     fp_t radiusx = start_radiusx;
     fp_t radiusy = start_radiusy;
     while (!_getc(&c)) {
